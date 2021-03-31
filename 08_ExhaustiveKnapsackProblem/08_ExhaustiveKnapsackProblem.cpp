@@ -97,11 +97,11 @@ pair<T, vector<int>> exhaustiveKnapSackProblem(vector<vector<T>>& I, T& W) {
 int main() {
     // Cria uma Matriz M (vetor de vetores) com pesos e valores
     // Primeira linha: pesos, Segunda linha: valores
-    vector< vector<float> > V = { {  7,  3,  4,  5 },
+    vector< vector<float> > V = { { 14,  6,  8, 10 },
                                   { 42, 12, 40, 25 } };
 
     // Declara a capacidade
-    float W = 10;
+    float W = 20;
 
     // Imprime capacidade e itens (peso, valor) da mochila
     printKnapSack(V, W);
