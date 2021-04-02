@@ -6,7 +6,7 @@ Implementações em C++ dos exercícios da Lista 02 da disciplina PCC104 Projeto
 
 Para cada um dos 10 exercícios, basta abrir o diretório correspondente e compilar o arquivo .cpp disponível.
 
-Os arquivos .cpp contém:
+Os arquivos ```.cpp``` contém:
 1. As funções que implementam os algoritmos pedidos, 
 2. Funções auxiliares (para imprimir dados, por exemplo), 
 3. Classes e funções para manipulação dos dados (quando necessário),
