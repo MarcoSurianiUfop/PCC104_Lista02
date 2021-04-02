@@ -12,4 +12,4 @@ Os arquivos ```.cpp``` contêm:
 3. Classes e funções para manipulação dos dados (quando necessário),
 4. Função ```main()``` que cria um conjunto de dados de teste, chama o algoritmo e imprime os resultados.
 
-Há também um arquivo compactado com as implementações apresentadas no relatório parcial entregue em 29/03.
+Há também um arquivo compactado ```PCC104_Lista02_old-main.zip```com as implementações apresentadas no relatório parcial entregue em 29/03.
