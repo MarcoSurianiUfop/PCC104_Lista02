@@ -24,30 +24,24 @@ public:
     int get_x(int n) { return V[n].first; }
     int get_y(int n) { return V[n].second; }
 
+    // Calcula coeficientes da reta entre os pontos [i] e [j]
+    int get_a(int i, int j) { return V[j].second - V[i].second; }
+    int get_b(int i, int j) { return V[i].first - V[j].first; }
+    int get_c(int i, int j) {
+        return V[i].first * V[j].second - V[i].second * V[j].first;
+    }
+
+    // Informa se o ponto [k] está acima ou abaixo da reta definida por a, b, c
+    int get_r(int k, int a, int b, int c) {
+        return a * V[k].first + b * V[k].second - c;
+    }  
+
     // Retorna a quantidade pontos armazenada
     int size() { return V.size(); }
 };
 
 void printPairs(Pontos& P);
 
-int orientation(vector<int>& T) {
-    /*  Encontra a orientação da tripla (p, q, r)
-    * ENTRADA:
-    * Ponteiro para Vetor v com elementos da tripla
-    * SAÍDA:
-    * 0 --> (p, q, r) colinear
-    * 1 --> Sentido Horário
-    * 2 --> Sentido AntiHorário
-    */
-
-    // Usa a seguinte fórmula para determinar a orientação
-    int val = (T[3] - T[1]) * (T[4] - T[2]) - (T[2] - T[0]) * (T[5] - T[3]);
-
-    // Se a fórmula retorna 0: colinear
-    if (val == 0) return 0;
-    // Caso contrário, retorna 1 se H ou 2 se AH
-    return (val > 0) ? 1 : 2;
-}
 
 Pontos bruteForceConvexHull(Pontos& P) {
     /*  Implementação do CONVEX HULL via Força Bruta
@@ -65,62 +59,96 @@ Pontos bruteForceConvexHull(Pontos& P) {
     // Inicializa estrutura com a saída
     Pontos convexHull;
 
-    // Inicializa estrutura auxiliar com triplas para cálculo da orientação
-    vector<int> triplet;
+    // Inicializa estrutura auxiliar added_to_convexhull
+    // Informa se ponto já pertence à casca convexa ou não
+    // Inicialmente, nenhum ponto pertence à casca
+    vector<bool> added_to_convexhull;
+    for (int i = 0; i < n; i++) {
+        added_to_convexhull.push_back(false);
+    }
 
     // Deve haver pelo menos 3 pontos, caso contrário retorna vazio
     if (n < 3) return convexHull;
 
-    // Encontra o ponto mais à esquerda (leftmost point)
-    // Supõe que leftmost é o primeiro ponto
-    int leftmost = 0;
-    // Percorre todos os pontos
-    for (int i = 0; i < n; i++)
-        // Se ponto atual está à esquera de leftmost, atualiza leftmost
-        if (P.get_x(i) < P.get_x(leftmost))
-            leftmost = i;
+    // Inicializa variáveis que serão úteis
+    // a, b, c : coeficientes de reta
+    int a, b, c;
+    // sign : -1 se ponto está abaixo da reta; 1 caso contrário
+    // current_sign : -1 se todos pontos estão abaixo da reta; 1 caso contrário
+    int current_sign, sign;
+    // sign_changed : determina se sign está igual ou diferente de current_sign
+    bool sign_changed;
 
-    // Começando do leftmost point, caminha no sentido AH
-    // até voltar no leftmost point.
+    // Percorre cada ponto da lista de Pontos
+    for (int i = 0; i < n; i++) {
+        // Percorre cada ponto após [i]
+        for (int j = i + 1; j < n; j++) {
+            // Calcula os coeficientes da reta entre [i] e [j]
+            a = P.get_a(i, j);
+            b = P.get_b(i, j);
+            c = P.get_c(i, j);
 
-    // Ponto atual p (inicia em leftmost) e candidato a próximo ponto q
-    int p = leftmost, q;
+            // current_sign = 0 (desconhecido)
+            current_sign = 0;
 
-    // Tente encontrar novos pontos da casca até chegar em leftmost novamente
-    do
-    {
-        // Imprime o ponto atual p (+1 para ficar mais intuitivo)
-        cout << p + 1 << " , ";
+            // sign_changed = false (não alterou)
+            sign_changed = false;
 
-        // Adicione o ponto atual p ao resultado
-        convexHull.set_point(P.get_x(p), P.get_y(p));
+            // Testa cada ponto [k] diferente de [i] e [j]
+            // para saber se estão todos abaixo ou acima da reta [i] a [j]
+            // Percorre cada ponto da lista de Pontos
+            for (int k = 0; k < n; k++) {
+                // Pula os pontos [i] e [j] da reta atual
+                if (k != i && k != j) {
+                    
+                    // Calcula se [k] está abaixo ou acima da reta
+                    sign = (P.get_r(k, a, b, c) < 0) ? -1 : 1;
+                    
+                    // Se current_sign = 0, atribua o valor de sign
+                    // Caso contrário, se os sinais de sign e current_sign
+                    // forem diferentes, o sinal alterou -> signigica que
+                    // alguns pontos estão abaixo da reta e outros acima ->
+                    // ou seja, [i] ou [j] não paertencem ao convex hull
+                    if (current_sign == 0) {
+                        current_sign = sign;
+                    } else if (current_sign + sign == 0) {
 
-        // Procure por um ponto q de forma que a tripla (p, q, x)
-        // tenha orientação AH para qualquer x.
+                        // Indica que a reta [i] a [j] não está na casca
+                        sign_changed = true;
 
-        // Candidato q é o próximo ponto após p
-        // Módulo de (p+1) força a contagem a voltar a 1 quando ultrapassa n
-        q = (p + 1) % n;
+                        // Quebra o laço for: não adianta continuar testando
+                        break;
+                    }
+                }
+            }
 
-        // Percorre cada ponto 
-        for (int i = 0; i < n; i++)
-        {
-            // Cria uma tripla com o ponto atual p, o ponto percorrido i
-            // e o ponto candidato q e calcula a orientação da tripla
-            triplet = { P.get_x(p), P.get_y(p),
-                        P.get_x(i), P.get_y(i),
-                        P.get_x(q), P.get_y(q) };
-            if (orientation(triplet) == 2)
-                // Caso i esteja mais AH do que candidato q, atualiza q
-                q = i;
+            // Caso o sinal não tenha alterado, todos pontos [k] estão 
+            // abaixo ou acima da reta [i] a [j], 
+            // ou seja, [i] e [j] peertecem à convex hull
+            if (!sign_changed) {
+
+                // Se ponto [i] ainda não foi acrescentado à casca, acrescente
+                if (!added_to_convexhull[i]) {
+
+                    // Atualize added_to_convexhull
+                    added_to_convexhull[i] = true;
+
+                    // Adicione o ponto atual ao resultado
+                    convexHull.set_point(P.get_x(i), P.get_y(i));
+                }
+
+                // Se ponto [j] ainda não foi acrescentado à casca, acrescente
+                if (!added_to_convexhull[j]) {
+
+                    // Atualize added_to_convexhull
+                    added_to_convexhull[j] = true;
+
+                    // Adicione o ponto atual ao resultado
+                    convexHull.set_point(P.get_x(j), P.get_y(j));
+                }
+            }
         }
-
-        // Atualiza o ponto atual p com o candidato mais AH encontrado: q
-        p = q;
-
-    } while (p != leftmost);
-
-    cout << endl;
+    }
 
     return convexHull;
 }
@@ -137,7 +165,7 @@ int main() {
     P.set_point(7, 7);
     P.set_point(1, 8);
     P.set_point(8, 1);
-    P.set_point(2, 0);
+    P.set_point(2, 1);
     P.set_point(3, 0);
 
     // Imprime os pontos de P
