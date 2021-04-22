@@ -4,6 +4,8 @@
 
 Implementações em C++ dos exercícios da Lista 02 da disciplina PCC104 Projeto e Análise de Algoritmos.
 
+Abrir arquivo do tipo solution ```PCC104_Lista02.sln```.
+
 Para cada um dos 10 exercícios, basta abrir o diretório correspondente e compilar o arquivo ```.cpp``` disponível.
 
 Os arquivos ```.cpp``` contêm:
