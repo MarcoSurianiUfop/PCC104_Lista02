@@ -7,12 +7,41 @@
 
 #include <iostream>
 #include <vector>
-#include <algorithm>
 
 using namespace std;
 
 template <class T>
 void printKnapSack(vector< vector<T> >& M, T& W);
+
+vector<int> decimal2binary(int dec, int n) {
+    /*  Converte um decimal em binário com n dígitos
+    * ENTRADAS:
+    * Inteiro dec a ser convertido
+    * Inteiro n com tamanho da saída
+    * SAÍDA:
+    * Vator de inteiros bin com tamanho n contendo dec em binário
+    */
+
+    // Inicializa a saída: vetor com n valores zero
+    vector<int> bin(n, 0);
+
+    // Indicador do dígito atual, começando pelo último (n-1)
+    int i = n - 1;
+
+    // Enquanto o valor dec for maior que 0, ele ainda pode ser dividido
+    while (dec > 0) {
+        // O dígito atual é o resto da divisão por 2 de dec
+        bin[i] = dec % 2;
+
+        // Reduz dec à metade, arredondando para baixo
+        dec = (dec % 2 == 0) ? dec / 2 : (dec - 1) / 2;
+
+        // Decrementa o dígito atual
+        i--;
+    }
+
+    return bin;
+}
 
 template <class T>
 pair<T, vector<int>> exhaustiveKnapSackProblem(vector<vector<T>>& I, T& W) {
@@ -32,64 +61,62 @@ pair<T, vector<int>> exhaustiveKnapSackProblem(vector<vector<T>>& I, T& W) {
     // Determina a quantidade de itens em I
     int n = I[0].size();
 
-    // Cria um vetor com todos os índices de todos itens da mochila
-    vector<int> index;
-    for (int i = 0; i < n; i++)
-        index.push_back(i);
-
     // Inicializa o peso e o valor acumulado na mochila para cada permutação
     T cumulative_weight, cumulative_value;
 
-    // Inicia a quantidade de itens na mochila em cada permutação
-    int itens_size;
-
-    // Itens na mochila na permutação corrente
-    vector<int> current_knap;
+    // Vetores com subset atual S, e subset com valor máximo S_max
+    vector<int> S, S_max;
 
     // Iniciliza a saída com um Par (peso, vetor de itens)
     // 1) Objeto do mesmo datatype das entradas com o valor final da mochila
     // 2) Vetor de inteiros com os itens que compõem a mochila
     pair<T, vector<int>> current_maximum;
 
-    // Realiza a análise da mochila atual expresso pela sequência
-    // de vértices no vetor vertex. 
-    // Ao terminar, atualiza o vetor vertex com a próxima permutação
-    // lexicograficamente maior. 
-    // Encerra o laço se não houver permutação maior.
-    do {
-
-        // Limpa a mochila atual e zera a sua quantidade de itens
-        current_knap.clear();
-        itens_size = 0;
+    // Realiza a análise de cada mochila possível expresso pela sequência
+    // de valores binários no vetor S (subset). 
+    // Itera cada um dos 2^n subconjuntos possíveis.
+    for (int i = 0; i < pow(2, n); i++) {
+        
+        // Subconjunto atual é a conversão da cardinalidade em binário
+        S = decimal2binary(i, n);
 
         // Peso e valor acumulados são zerados
         cumulative_weight = 0;
         cumulative_value = 0;
 
-        // Enquanto o próximo item na sequência de vertex couber na mochila
-        while (cumulative_weight + I[0][index[itens_size]] <= W) {
+        // Itera cada item da mochila
+        for (int j = 0; j < n; j++) {
 
-            // Acrescenta o peso e o valor de tal item aos acumuladores
-            cumulative_weight += I[0][index[itens_size]];
-            cumulative_value += I[1][index[itens_size]];
+            // Se tal item pertencer ao subconjunto atual
+            if (S[j] == 1) {
 
-            // Acreascenta o item à mochila atual e incrementa sua quantidade
-            current_knap.push_back(index[itens_size]);
-            itens_size++;
+                // Acrescenta o peso e o valor de tal item aos acumuladores
+                cumulative_weight += I[0][j];
+                cumulative_value += I[1][j];
+            }
+        } 
 
-        } // Caso um novo item exceda o peso, para de encher a mochila
+        // Caso o peso dos itens não exceda a capacidade da mochila
+        if (cumulative_weight <= W) {
 
-        // Caso o valor acumulado nessa mochila exceda o maior valor atual
-        if (cumulative_value > current_maximum.first) {
+            // Caso o valor acumulado nessa mochila exceda o maior valor atual
+            if (cumulative_value > current_maximum.first) {
 
-            // Substitui o máximo atual pelos itens desta permutação
-            current_maximum.first = cumulative_value;
-            current_maximum.second.clear();
-            current_maximum.second = current_knap;
+                // Substitui o máximo atual pelos itens desta permutação
+                current_maximum.first = cumulative_value;
+                current_maximum.second.clear();
+                S_max = S;
+            }
         }
-
-        // Tenta criar próxima permutação. Se falhar, encerra o laço.
-    } while (next_permutation(index.begin(), index.end()));
+    } 
+    
+    // Converte os binários do maior subconjunto nos respectivos itens da mochila
+    int k = 0;
+    for (int i : S_max) {
+        // Para cada item, se ele pertencer à mochil (S=1), acrescente-o à saída
+        if (i == 1) { current_maximum.second.push_back(k); }
+        k++;
+    }
 
     return current_maximum;
 }
